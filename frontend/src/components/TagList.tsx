@@ -1,0 +1,1 @@
+export function TagList({tags,onSelect}:{tags:string[];onSelect?:(tag:string)=>void}){ return <ul className="tags">{tags.map(t=><li key={t}>{onSelect?<button onClick={()=>onSelect(t)}>{t}</button>:<span>{t}</span>}</li>)}</ul>; }

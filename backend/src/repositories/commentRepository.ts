@@ -1,0 +1,5 @@
+import { query } from '../db/pool.js';
+import { isFollowing } from './followRepository.js';
+export async function createComment(articleId:number,userId:number,body:string){ return (await query('insert into comments (article_id,user_id,body) values ($1,$2,$3) returning *',[articleId,userId,body])).rows[0]; }
+export async function deleteComment(id:number,userId:number){ const found=(await query('select * from comments where id=$1',[id])).rows[0]; if(!found) return 'missing'; if(found.user_id!==userId) return 'forbidden'; await query('delete from comments where id=$1',[id]); return 'deleted'; }
+export async function commentsForArticle(articleId:number,currentUserId?:number){ const rows=(await query('select c.*, u.username,u.bio,u.image from comments c join users u on u.id=c.user_id where c.article_id=$1 order by c.created_at asc',[articleId])).rows; return Promise.all(rows.map(async r=>({ id:r.id, createdAt:new Date(r.created_at).toISOString(), updatedAt:new Date(r.updated_at).toISOString(), body:r.body, author:{ username:r.username, bio:r.bio, image:r.image, following: await isFollowing(currentUserId,r.user_id) } }))); }

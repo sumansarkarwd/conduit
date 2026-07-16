@@ -1,0 +1,1 @@
+export function ErrorList({errors}:{errors:any}){ if(!errors) return null; const items=Object.entries(errors.errors ?? errors).flatMap(([k,v])=>(Array.isArray(v)?v:[String(v)]).map(m=>`${k} ${m}`)); return <ul className="errors" role="alert">{items.map(i=><li key={i}>{i}</li>)}</ul>; }

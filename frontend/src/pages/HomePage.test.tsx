@@ -1,0 +1,5 @@
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { apiMock, renderApp, resetApi, sampleArticle, sampleUser } from '../test/testUtils';
+describe('HomePage',()=>{ beforeEach(resetApi); it('shows global feed, tags, and pagination/tag filtering', async()=>{ apiMock.listArticles.mockResolvedValueOnce({articles:[sampleArticle],articlesCount:11}); renderApp('/'); expect(await screen.findByText('Hello')).toBeInTheDocument(); expect(screen.getByText('Popular Tags')).toBeInTheDocument(); await userEvent.click(screen.getByRole('button',{name:'tag'})); await waitFor(()=>expect(apiMock.listArticles).toHaveBeenCalledWith(expect.stringContaining('tag=tag'))); }); it('shows personal feed tab for signed-in users', async()=>{ localStorage.setItem('conduit_token','t'); apiMock.currentUser.mockResolvedValue({user:sampleUser}); renderApp('/'); await screen.findByText('Your Feed'); await userEvent.click(screen.getByText('Your Feed')); await waitFor(()=>expect(apiMock.feed).toHaveBeenCalled()); }); });

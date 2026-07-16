@@ -1,0 +1,5 @@
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { apiMock, renderApp, resetApi, sampleProfile, sampleUser } from '../test/testUtils';
+describe('ProfilePage',()=>{ beforeEach(resetApi); it('shows profile tabs and follows/unfollows', async()=>{ localStorage.setItem('conduit_token','t'); apiMock.currentUser.mockResolvedValue({user:{...sampleUser,username:'bob'}}); apiMock.follow.mockResolvedValue({profile:{...sampleProfile,following:true}}); renderApp('/profile/alice'); expect(await screen.findByRole('heading',{name:'alice'})).toBeInTheDocument(); expect(screen.getByText('My Articles')).toBeInTheDocument(); await userEvent.click(screen.getByText('Favorited Articles')); await waitFor(()=>expect(apiMock.listArticles).toHaveBeenCalledWith('?favorited=alice')); await userEvent.click(screen.getByText('Follow alice')); expect(await screen.findByText('Unfollow alice')).toBeInTheDocument(); }); });
