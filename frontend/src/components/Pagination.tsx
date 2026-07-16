@@ -1,0 +1,1 @@
+export function Pagination({count,limit,page,onPage}:{count:number;limit:number;page:number;onPage:(p:number)=>void}){ const pages=Math.ceil(count/limit); if(pages<=1) return null; return <nav aria-label="pagination">{Array.from({length:pages},(_,i)=><button className={i===page?'active':''} key={i} onClick={()=>onPage(i)}>{i+1}</button>)}</nav>; }

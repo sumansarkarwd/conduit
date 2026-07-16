@@ -1,0 +1,8 @@
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { api, setTokenProvider } from '../api/client';
+import type { User } from '../api/types';
+type Auth={user:User|null;loading:boolean;signIn:(email:string,password:string)=>Promise<void>;signUp:(username:string,email:string,password:string)=>Promise<void>;signOut:()=>void;updateCurrentUser:(user:Partial<User>&{password?:string})=>Promise<void>};
+const AuthContext=createContext<Auth|null>(null);
+const key='conduit_token';
+export function AuthProvider({children}:{children:ReactNode}){ const [user,setUser]=useState<User|null>(null); const [loading,setLoading]=useState(true); setTokenProvider(()=>localStorage.getItem(key)); useEffect(()=>{ const token=localStorage.getItem(key); if(!token){ setLoading(false); return; } api.currentUser().then(r=>setUser(r.user)).catch(()=>localStorage.removeItem(key)).finally(()=>setLoading(false)); },[]); const value=useMemo<Auth>(()=>({user,loading,signIn:async(email,password)=>{ const r=await api.login({email,password}); localStorage.setItem(key,r.user.token); setUser(r.user); },signUp:async(username,email,password)=>{ const r=await api.register({username,email,password}); localStorage.setItem(key,r.user.token); setUser(r.user); },signOut:()=>{localStorage.removeItem(key); setUser(null);},updateCurrentUser:async(data)=>{ const r=await api.updateUser(data); localStorage.setItem(key,r.user.token); setUser(r.user); }}),[user,loading]); return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>; }
+export function useAuth(){ const ctx=useContext(AuthContext); if(!ctx) throw new Error('useAuth must be used inside AuthProvider'); return ctx; }

@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  title: Conduit API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001/api
+security:
+  - TokenAuth: []
+components:
+  securitySchemes:
+    TokenAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Accepts `Authorization: Token <jwt>` and `Authorization: Bearer <jwt>`.
+  schemas:
+    ErrorResponse:
+      type: object
+      properties: { errors: { type: object, additionalProperties: { type: array, items: { type: string } } } }
+    User:
+      type: object
+      properties: { email: {type: string}, token: {type: string}, username: {type: string}, bio: {type: string, nullable: true}, image: {type: string, nullable: true} }
+    Profile:
+      type: object
+      properties: { username: {type: string}, bio: {type: string, nullable: true}, image: {type: string, nullable: true}, following: {type: boolean} }
+    Article:
+      type: object
+      properties:
+        slug: {type: string}
+        title: {type: string}
+        description: {type: string}
+        body: {type: string}
+        tagList: {type: array, items: {type: string}}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+        favorited: {type: boolean}
+        favoritesCount: {type: integer}
+        author: { $ref: '#/components/schemas/Profile' }
+    Comment:
+      type: object
+      properties: { id: {type: integer}, createdAt: {type: string}, updatedAt: {type: string}, body: {type: string}, author: { $ref: '#/components/schemas/Profile' } }
+paths:
+  /users:
+    post:
+      security: []
+      summary: Register a user
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '201': { description: Created }, '422': { description: Validation error } }
+  /users/login:
+    post:
+      security: []
+      summary: Login
+      responses: { '200': { description: Current user }, '401': { description: Invalid credentials } }
+  /user:
+    get:
+      summary: Current user
+      responses: { '200': { description: Current user }, '401': { description: Unauthorized } }
+    put:
+      summary: Update current user settings
+      responses: { '200': { description: Updated user }, '422': { description: Validation error } }
+  /profiles/{username}:
+    get:
+      security: []
+      summary: Get profile with following state
+      parameters: [{ name: username, in: path, required: true, schema: {type: string} }]
+      responses: { '200': { description: Profile } }
+  /profiles/{username}/follow:
+    post:
+      summary: Follow profile
+      parameters: [{ name: username, in: path, required: true, schema: {type: string} }]
+      responses: { '200': { description: Profile } }
+    delete:
+      summary: Unfollow profile
+      parameters: [{ name: username, in: path, required: true, schema: {type: string} }]
+      responses: { '200': { description: Profile } }
+  /articles:
+    get:
+      security: []
+      summary: Global articles
+      parameters:
+        - { name: tag, in: query, schema: {type: string} }
+        - { name: author, in: query, schema: {type: string} }
+        - { name: favorited, in: query, schema: {type: string} }
+        - { name: limit, in: query, schema: {type: integer} }
+        - { name: offset, in: query, schema: {type: integer} }
+      responses: { '200': { description: Article list with articlesCount } }
+    post:
+      summary: Create article
+      responses: { '201': { description: Article }, '401': { description: Unauthorized }, '422': { description: Validation error } }
+  /articles/feed:
+    get:
+      summary: Personal feed from followed authors
+      parameters: [{ name: limit, in: query, schema: {type: integer} }, { name: offset, in: query, schema: {type: integer} }]
+      responses: { '200': { description: Article list } }
+  /articles/{slug}:
+    get:
+      security: []
+      summary: Get article
+      parameters: [{ name: slug, in: path, required: true, schema: {type: string} }]
+      responses: { '200': { description: Article }, '404': { description: Missing } }
+    put:
+      summary: Update owner article
+      parameters: [{ name: slug, in: path, required: true, schema: {type: string} }]
+      responses: { '200': { description: Article }, '403': { description: Cross-user mutation rejected } }
+    delete:
+      summary: Delete owner article
+      parameters: [{ name: slug, in: path, required: true, schema: {type: string} }]
+      responses: { '204': { description: Deleted }, '403': { description: Cross-user mutation rejected } }
+  /articles/{slug}/favorite:
+    post: { summary: Favorite article, parameters: [{ name: slug, in: path, required: true, schema: {type: string} }], responses: { '200': { description: Article } } }
+    delete: { summary: Unfavorite article, parameters: [{ name: slug, in: path, required: true, schema: {type: string} }], responses: { '200': { description: Article } } }
+  /articles/{slug}/comments:
+    get: { security: [], summary: List comments, parameters: [{ name: slug, in: path, required: true, schema: {type: string} }], responses: { '200': { description: Comments } } }
+    post: { summary: Add comment, parameters: [{ name: slug, in: path, required: true, schema: {type: string} }], responses: { '201': { description: Comment } } }
+  /articles/{slug}/comments/{id}:
+    delete:
+      summary: Delete own comment
+      parameters: [{ name: slug, in: path, required: true, schema: {type: string} }, { name: id, in: path, required: true, schema: {type: integer} }]
+      responses: { '204': { description: Deleted }, '403': { description: Cross-user mutation rejected } }
+  /tags:
+    get: { security: [], summary: Popular tags, responses: { '200': { description: Tag list } } }

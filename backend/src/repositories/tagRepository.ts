@@ -1,0 +1,5 @@
+import { query } from '../db/pool.js';
+export async function getOrCreateTag(name:string){ const existing=await query('select * from tags where lower(name)=lower($1)',[name]); if(existing.rows[0]) return existing.rows[0]; return (await query('insert into tags (name) values ($1) returning *',[name])).rows[0]; }
+export async function setArticleTags(articleId:number,names:string[]){ await query('delete from article_tags where article_id=$1',[articleId]); for(const raw of [...new Set(names.map(t=>t.trim()).filter(Boolean))]){ const tag=await getOrCreateTag(raw); await query('insert into article_tags (article_id,tag_id) values ($1,$2) on conflict do nothing',[articleId,tag.id]); } }
+export async function tagsForArticle(articleId:number){ return (await query('select t.name from tags t join article_tags at on at.tag_id=t.id where at.article_id=$1 order by t.name',[articleId])).rows.map(r=>r.name as string); }
+export async function allTags(){ return (await query('select name from tags order by name')).rows.map(r=>r.name as string); }

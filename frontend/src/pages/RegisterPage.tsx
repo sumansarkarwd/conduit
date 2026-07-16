@@ -1,0 +1,5 @@
+import { FormEvent, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { ErrorList } from '../components/ErrorList';
+export function RegisterPage(){ const {signUp}=useAuth(); const nav=useNavigate(); const [username,setUsername]=useState(''); const [email,setEmail]=useState(''); const [password,setPassword]=useState(''); const [errors,setErrors]=useState<any>(); async function submit(e:FormEvent){ e.preventDefault(); try{ await signUp(username,email,password); nav('/'); }catch(err){ setErrors(err); } } return <main><h1>Sign up</h1><Link to="/login">Have an account?</Link><ErrorList errors={errors}/><form onSubmit={submit}><input aria-label="Username" value={username} onChange={e=>setUsername(e.target.value)}/><input aria-label="Email" value={email} onChange={e=>setEmail(e.target.value)}/><input aria-label="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)}/><button>Sign up</button></form></main>; }
