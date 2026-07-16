@@ -1,3 +1,4 @@
+import { AppShell, MantineProvider } from '@mantine/core';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
@@ -11,5 +12,5 @@ export const sampleComment={id:1,createdAt:new Date().toISOString(),updatedAt:ne
 const mocked = vi.hoisted(() => ({ apiMock:{register:vi.fn(),login:vi.fn(),currentUser:vi.fn(),updateUser:vi.fn(),listArticles:vi.fn(),feed:vi.fn(),getArticle:vi.fn(),createArticle:vi.fn(),updateArticle:vi.fn(),deleteArticle:vi.fn(),favorite:vi.fn(),unfavorite:vi.fn(),comments:vi.fn(),addComment:vi.fn(),deleteComment:vi.fn(),tags:vi.fn(),profile:vi.fn(),follow:vi.fn(),unfollow:vi.fn()} }));
 vi.mock('../api/client',()=>({ api:mocked.apiMock, setTokenProvider:vi.fn() }));
 export const apiMock = mocked.apiMock;
-export function resetApi(){ Object.values(apiMock).forEach(fn=>fn.mockReset()); apiMock.currentUser.mockRejectedValue({}); apiMock.tags.mockResolvedValue({tags:['tag','react']}); apiMock.listArticles.mockResolvedValue({articles:[sampleArticle],articlesCount:1}); apiMock.feed.mockResolvedValue({articles:[],articlesCount:0}); apiMock.getArticle.mockResolvedValue({article:sampleArticle}); apiMock.comments.mockResolvedValue({comments:[sampleComment]}); apiMock.profile.mockResolvedValue({profile:sampleProfile}); }
-export function renderApp(path='/'){ return render(<MemoryRouter initialEntries={[path]}><AuthProvider><Header/><AppRoutes/></AuthProvider></MemoryRouter>); }
+export function resetApi(){ localStorage.clear(); Object.values(apiMock).forEach(fn=>fn.mockReset()); apiMock.currentUser.mockRejectedValue({}); apiMock.tags.mockResolvedValue({tags:['tag','react']}); apiMock.listArticles.mockResolvedValue({articles:[sampleArticle],articlesCount:1}); apiMock.feed.mockResolvedValue({articles:[],articlesCount:0}); apiMock.getArticle.mockResolvedValue({article:sampleArticle}); apiMock.comments.mockResolvedValue({comments:[sampleComment]}); apiMock.profile.mockResolvedValue({profile:sampleProfile}); }
+export function renderApp(path='/'){ return render(<MantineProvider defaultColorScheme="light" theme={{primaryColor:'green'}}><MemoryRouter initialEntries={[path]}><AuthProvider><AppShell header={{height:64}} padding="md"><Header/><AppShell.Main><AppRoutes/></AppShell.Main></AppShell></AuthProvider></MemoryRouter></MantineProvider>); }
